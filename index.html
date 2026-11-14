@@ -24,7 +24,7 @@ body{font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,Helvetica,Aria
 
 /* ---------- layout ---------- */
 .wrap{height:100vh;display:flex;flex-direction:column;padding:2.2vw 2.6vw 1.4vw;gap:1.8vw}
-.top{display:grid;grid-template-columns:1fr 2.75fr;gap:1.6vw;flex:1;min-height:0}
+.top{display:grid;grid-template-columns:1fr;flex:1;min-height:0}
 .card{background:var(--card);border:1px solid var(--card-line);border-radius:1.8vw;
   box-shadow:0 1.4vw 3vw rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);
   -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);min-height:0;overflow:hidden}
@@ -81,17 +81,6 @@ body{font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,Helvetica,Aria
 
 <div class="wrap">
   <section class="top">
-    <div class="card clock">
-      <div style="display:flex;justify-content:space-between;align-items:center"><span id="greet">Good evening</span><span class="label">Home</span></div>
-      <div>
-        <div class="time"><span id="hm">--:--</span><span id="sec"></span></div>
-        <div id="ampm"></div>
-        <div id="day"></div>
-        <div id="date"></div>
-      </div>
-      <div class="cal" id="cal"></div>
-    </div>
-
     <a class="card portal" id="portal" href="#" aria-label="Open Tesla Power Flow full screen">
       <div class="loading">Loading Tesla Power Flow…</div>
       <iframe id="portalFrame" title="Tesla Power Flow" tabindex="-1" loading="eager"></iframe>
@@ -109,7 +98,6 @@ body{font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,Helvetica,Aria
    key    = the number you gave that app in LG Quick Access (hold 0 on the remote). "" = none.
    ============================================================ */
 var HUB_CONFIG = {
-  clock24h: false, showSeconds: true,
   portal: { url:"https://portal-home-api.arvargas78.workers.dev/", designWidth:1600 },
   apps: [
     { name:"Tesla",       url:"https://portal-home-api.arvargas78.workers.dev/", icon:"tesla", bg:"linear-gradient(150deg,#e82127,#7a0b0f)", halo:"rgba(232,33,39,.5)", key:"" },
@@ -139,27 +127,7 @@ var ICONS = {
   photos:'<svg viewBox="0 0 100 100"><path d="M50 50V18a16 16 0 0 1 0 32z" fill="#ea4335"/><path d="M50 50h32a16 16 0 0 1-32 0z" fill="#4285f4"/><path d="M50 50v32a16 16 0 0 1 0-32z" fill="#34a853"/><path d="M50 50H18a16 16 0 0 1 32 0z" fill="#fbbc04"/></svg>'
 };
 
-/* ---------- clock + mini calendar ---------- */
-function pad(n){return n<10?"0"+n:""+n}
-var lastDay=-1;
-function tick(){
-  var d=new Date(),h=d.getHours(),m=d.getMinutes();
-  document.getElementById("hm").textContent=HUB_CONFIG.clock24h?pad(h)+":"+pad(m):((h%12)||12)+":"+pad(m);
-  document.getElementById("sec").textContent=HUB_CONFIG.showSeconds?pad(d.getSeconds()):"";
-  document.getElementById("ampm").textContent=HUB_CONFIG.clock24h?"":(h<12?"AM":"PM");
-  document.getElementById("greet").textContent=h<5?"Good night":h<12?"Good morning":h<18?"Good afternoon":"Good evening";
-  if(d.getDate()!==lastDay){lastDay=d.getDate();drawDate(d);glows(h)}
-}
-function drawDate(d){
-  document.getElementById("day").textContent=d.toLocaleDateString(undefined,{weekday:"long"});
-  document.getElementById("date").textContent=d.toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"});
-  var y=d.getFullYear(),mo=d.getMonth(),first=new Date(y,mo,1).getDay(),days=new Date(y,mo+1,0).getDate(),prev=new Date(y,mo,0).getDate(),s="";
-  "SMTWTFS".split("").forEach(function(c){s+='<div class="h">'+c+'</div>'});
-  for(var i=0;i<first;i++)s+='<div class="o">'+(prev-first+1+i)+'</div>';
-  for(var j=1;j<=days;j++)s+='<div'+(j===d.getDate()?' class="t"':'')+'>'+j+'</div>';
-  var cells=first+days;while(cells%7){s+='<div class="o">'+(cells-first-days+1)+'</div>';cells++}
-  document.getElementById("cal").innerHTML=s;
-}
+/* ---------- background glow follows the time of day (the clock lives in the portal) ---------- */
 function glows(h){
   var r=document.documentElement.style,g;
   if(h<6||h>=20)g=["rgba(99,102,241,.18)","rgba(30,64,175,.16)"];
@@ -167,7 +135,7 @@ function glows(h){
   else g=["rgba(56,189,248,.20)","rgba(250,204,21,.09)"];
   r.setProperty("--glow1",g[0]);r.setProperty("--glow2",g[1]);
 }
-tick();setInterval(tick,1000);
+glows(new Date().getHours());
 setInterval(function(){glows(new Date().getHours())},10*60*1000);
 
 /* ---------- live portal panel: drawn at a desktop size, then scaled to fit ---------- */
